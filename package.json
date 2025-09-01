@@ -1,0 +1,10 @@
+{
+  "name": "testlist-app",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "postinstall": "npm --prefix server i && npm --prefix client i",
+    "build": "npm --prefix client run build",
+    "start": "NODE_ENV=production node server/server.js"
+  }
+}
