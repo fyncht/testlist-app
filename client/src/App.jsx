@@ -106,8 +106,6 @@ export default function App() {
     const newOrder = arrayMove(items, oldIndex, newIndex)
     setItems(newOrder)
 
-    // 🔑 Если есть выделенные чекбоксами — сохраняем ПОРЯДОК ТОЛЬКО их.
-    // Иначе — сохраняем порядок всей видимой двадцатки (как раньше).
     const selectedIdsInVisibleOrder = newOrder.filter(i => i.selected).map(i => i.id)
     const payloadIds = selectedIdsInVisibleOrder.length > 0
       ? selectedIdsInVisibleOrder
