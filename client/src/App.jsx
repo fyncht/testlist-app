@@ -1,6 +1,6 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { fetchPage, toggleSelect, applyReorder } from './api.js'
+import { fetchPage, toggleSelect, applyReorder, reorderSingle } from './api.js'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSensors, useSensor, PointerSensor } from '@dnd-kit/core'
@@ -85,7 +85,7 @@ export default function App() {
     setItems(prev => prev.map(it => ({ ...it, selected: want })))
   }
 
-  // Drag & Drop
+  // drag & Drop
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
   const [activeId, setActiveId] = useState(null)
 
@@ -102,17 +102,23 @@ export default function App() {
     const oldIndex = ids.indexOf(active.id)
     const newIndex = ids.indexOf(over.id)
 
-    // Локально меняем порядок для UX
+    // локально двигаем 
     const newOrder = arrayMove(items, oldIndex, newIndex)
     setItems(newOrder)
 
-    const selectedIdsInVisibleOrder = newOrder.filter(i => i.selected).map(i => i.id)
-    const payloadIds = selectedIdsInVisibleOrder.length > 0
-      ? selectedIdsInVisibleOrder
-      : newOrder.map(i => i.id)
+    const selectedIds = newOrder.filter(i => i.selected).map(i => i.id)
 
     try {
-      await applyReorder(payloadIds)
+      if (selectedIds.length > 0) {
+        // если есть отмеченные — сохраняем порядок только их
+        const onlySelectedInNewOrder = newOrder.filter(i => i.selected).map(i => i.id)
+        await applyReorder(onlySelectedInNewOrder)
+      } else {
+        // иначе сохраняем только перетаскиваемый элемент как вставку между соседями
+        const beforeId = newOrder[newIndex - 1]?.id ?? null
+        const afterId  = newOrder[newIndex + 1]?.id ?? null
+        await reorderSingle(active.id, beforeId, afterId)
+      }
     } catch (e) {
       console.error(e)
     }

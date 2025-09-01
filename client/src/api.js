@@ -29,3 +29,15 @@ export async function applyReorder(orderedIds) {
   if (!res.ok) throw new Error('Failed to reorder');
   return res.json();
 }
+
+export async function reorderSingle(id, beforeId, afterId) {
+  const res = await fetch(`${base}/api/reorderSingle`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ id, beforeId, afterId }),
+  });
+  if (!res.ok) throw new Error('Failed to reorderSingle');
+  return res.json();
+}
+

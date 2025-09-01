@@ -164,6 +164,42 @@ app.post('/api/reorder', (req, res) => {
   }
 });
 
+// вставка одного элемента между соседями 
+app.post('/api/reorderSingle', (req, res) => {
+  try {
+    const { id, beforeId = null, afterId = null } = req.body || {};
+    const numId = Number(id);
+    if (!Number.isInteger(numId) || numId < 1 || numId > N) {
+      return res.status(400).json({ error: 'bad id' });
+    }
+    const b = (beforeId != null) ? Number(beforeId) : null;
+    const a = (afterId != null) ? Number(afterId) : null;
+
+    const pB = (b && b >= 1 && b <= N) ? getPriorityFor(req.session, b) : null;
+    const pA = (a && a >= 1 && a <= N) ? getPriorityFor(req.session, a) : null;
+
+    const EPS = 1e-6;
+    let newP;
+
+    if (pB != null && pA != null) {
+      newP = (pB + pA) / 2;
+    } else if (pB == null && pA != null) {
+      newP = pA - EPS; // в самый верх относительно after
+    } else if (pB != null && pA == null) {
+      newP = pB + EPS; // сразу после before
+    } else {
+      newP = getPriorityFor(req.session, numId); // ни до, ни после 
+    }
+
+    req.session.priorities.set(numId, newP);
+    res.json({ ok: true, id: numId, priority: newP });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 // clear state
 app.post('/api/reset', (req, res) => {
   req.session.selected.clear();
