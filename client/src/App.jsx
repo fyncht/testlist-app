@@ -98,16 +98,28 @@ export default function App() {
     const { active, over } = event
     setActiveId(null)
     if (!over || active.id === over.id) return
+
     const oldIndex = ids.indexOf(active.id)
     const newIndex = ids.indexOf(over.id)
+
+    // Локально меняем порядок для UX
     const newOrder = arrayMove(items, oldIndex, newIndex)
     setItems(newOrder)
+
+    // 🔑 Если есть выделенные чекбоксами — сохраняем ПОРЯДОК ТОЛЬКО их.
+    // Иначе — сохраняем порядок всей видимой двадцатки (как раньше).
+    const selectedIdsInVisibleOrder = newOrder.filter(i => i.selected).map(i => i.id)
+    const payloadIds = selectedIdsInVisibleOrder.length > 0
+      ? selectedIdsInVisibleOrder
+      : newOrder.map(i => i.id)
+
     try {
-      await applyReorder(newOrder.map(i => i.id))
+      await applyReorder(payloadIds)
     } catch (e) {
       console.error(e)
     }
   }
+
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: 16 }}>
